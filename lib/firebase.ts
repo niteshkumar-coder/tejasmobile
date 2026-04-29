@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
 import { getFirestore, doc, getDocFromServer } from 'firebase/firestore';
 import firebaseConfig from '../firebase-applet-config.json';
 
@@ -8,51 +8,38 @@ export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 
-// Connectivity check
-async function testConnection() {
+// Test connection as per instructions
+export async function testFirestoreConnection() {
   try {
     await getDocFromServer(doc(db, 'test', 'connection'));
-  } catch (error) {
-    if (error instanceof Error && error.message.includes('the client is offline')) {
-      console.error("Please check your Firebase configuration.");
+  } catch (error: any) {
+    if (error.message?.includes('the client is offline')) {
+      console.error("Please check your Firebase configuration. The client is offline.");
     }
   }
 }
-testConnection();
 
-export enum OperationType {
-  CREATE = 'create',
-  UPDATE = 'update',
-  DELETE = 'delete',
-  LIST = 'list',
-  GET = 'get',
-  WRITE = 'write',
-}
+export const signInWithGoogle = async () => {
+  try {
+    const result = await signInWithPopup(auth, googleProvider);
+    return result.user;
+  } catch (error: any) {
+    console.error("Auth error:", error);
+    
+    if (error.code === 'auth/popup-blocked') {
+      throw new Error('Popup Blocked! Browsers block login windows inside this preview. Please click the "Open in New Tab" button below to continue.');
+    }
+    
+    if (error.code === 'auth/popup-closed-by-user') {
+      throw new Error('Login cancelled. Please try again.');
+    }
 
-export interface FirestoreErrorInfo {
-  error: string;
-  operationType: OperationType;
-  path: string | null;
-  authInfo: {
-    userId?: string | null;
-    email?: string | null;
-    emailVerified?: boolean | null;
-    isAnonymous?: boolean | null;
+    if (error.code === 'auth/cancelled-popup-request') {
+      return null;
+    }
+    
+    throw new Error('Authentication failed: ' + (error.message || 'Unknown error'));
   }
-}
+};
 
-export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
-  const errInfo: FirestoreErrorInfo = {
-    error: error instanceof Error ? error.message : String(error),
-    authInfo: {
-      userId: auth.currentUser?.uid,
-      email: auth.currentUser?.email,
-      emailVerified: auth.currentUser?.emailVerified,
-      isAnonymous: auth.currentUser?.isAnonymous,
-    },
-    operationType,
-    path
-  };
-  console.error('Firestore Error: ', JSON.stringify(errInfo));
-  throw new Error(JSON.stringify(errInfo));
-}
+export const logout = () => signOut(auth);
