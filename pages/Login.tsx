@@ -50,10 +50,17 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
         navigate('/');
       }
     } catch (err: any) {
-      if (err.message.includes('Popup Blocked') || err.message.includes('closed before completion')) {
+      if (err.message === 'POPUP_BLOCKED') {
         setIsPopupBlocked(true);
+        setError(isInIframe 
+          ? 'Browsers block login windows inside this preview frame. Please use the "Open in New Tab" button.'
+          : 'Your browser blocked the login popup. Please allow popups for this site in your browser settings.');
+      } else if (err.message === 'POPUP_CLOSED') {
+        setError('Login window was closed before completion. Please try again.');
+        setIsPopupBlocked(true); // Offer new tab as fallback
+      } else {
+        setError(err.message || 'Failed to sign in with Google');
       }
-      setError(err.message || 'Failed to sign in with Google');
     } finally {
       setIsLoading(false);
     }
@@ -132,7 +139,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                   onClick={handleOpenInNewTab}
                   className="w-full flex items-center justify-center gap-2 bg-brand-accent text-white py-4 rounded-xl font-black uppercase tracking-widest shadow-lg hover:scale-[1.02] active:scale-95 transition-all animate-bounce"
                 >
-                  <ExternalLink size={20} /> Open in New Tab to Login
+                  <ExternalLink size={20} /> {isInIframe ? 'Open in New Tab to Login' : 'Try Opening Standalone Again'}
                 </button>
               )}
             </div>
