@@ -27,18 +27,18 @@ export const signInWithGoogle = async () => {
     console.error("Auth error:", error);
     
     if (error.code === 'auth/popup-blocked') {
-      throw new Error('Popup Blocked! Browsers block login windows inside this preview. Please click the "Open in New Tab" button below to continue.');
+      throw new Error('POPUP_BLOCKED');
     }
     
     if (error.code === 'auth/popup-closed-by-user') {
-      throw new Error('Login cancelled. Please try again.');
+      throw new Error('POPUP_CLOSED');
     }
 
     if (error.code === 'auth/cancelled-popup-request') {
       return null;
     }
     
-    throw new Error('Authentication failed: ' + (error.message || 'Unknown error'));
+    throw new Error(error.message || 'AUTH_FAILED');
   }
 };
 
