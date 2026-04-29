@@ -238,8 +238,15 @@ const App: React.FC = () => {
     try {
       await signInWithPopup(auth, googleProvider);
       setShowGoogleModal(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Google login failed:", error);
+      if (error.code === 'auth/popup-blocked') {
+        setNotification("Popup Blocked! Please allow popups or open the app in a new tab using the icon at top-right.");
+        setTimeout(() => setNotification(null), 10000);
+      } else {
+        setNotification("Login failed. Please try again.");
+        setTimeout(() => setNotification(null), 3000);
+      }
     }
   };
 

@@ -20,7 +20,11 @@ export const Login: React.FC<LoginProps> = () => {
       // Success handled by App.tsx observer
     } catch (err: any) {
       console.error("Login Error:", err);
-      setError(err.message || 'Failed to connect to Google Security Services.');
+      if (err.code === 'auth/popup-blocked') {
+        setError('Popup Blocked! Please allow popups for this site or open the app in a "New Tab" using the icon at the top right of the preview.');
+      } else {
+        setError(err.message || 'Failed to connect to Google Security Services.');
+      }
     } finally {
       setIsLoading(false);
     }
