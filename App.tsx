@@ -236,9 +236,8 @@ const App: React.FC = () => {
 
   const handleGoogleLogin = async () => {
     try {
-      const result = await signInWithPopup(auth, googleProvider);
+      await signInWithPopup(auth, googleProvider);
       setShowGoogleModal(false);
-      // Logic handled by Auth State Listener
     } catch (error) {
       console.error("Google login failed:", error);
     }
